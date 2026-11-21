@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BÀI 15 – BÀI KHÓA</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,"Microsoft YaHei",sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#f9fbff);
+  display:flex; justify-content:center; color:#202124; cursor:pointer;
+}
+.app{width:min(900px,96vw); padding:20px 0 30px}
+h1{text-align:center;margin:0 0 6px;font-size:32px}
+.subtitle{text-align:center;color:#666;margin-bottom:14px;font-size:18px}
+.progress{text-align:center;font-size:18px;color:#666;margin-bottom:12px}
+.card-wrap{perspective:1200px; cursor:pointer}
+.card{
+  width:100%; height:600px; position:relative; transform-style:preserve-3d;
+  transition:transform .55s ease;
+}
+.card.flipped{transform:rotateY(180deg)}
+.face{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:24px; background:white; box-shadow:0 12px 35px rgba(30,60,100,.15);
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:28px 36px; border:1px solid #e6eaf0; overflow:hidden;
+}
+.back{transform:rotateY(180deg)}
+
+.card-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 10px;
+}
+
+.context-title {
+  font-weight: bold;
+  margin-bottom: 18px;
+  font-size: 22px;
+  color: #2c3e50;
+  line-height: 1.5;
+  border-bottom: 2px solid #edf2f7;
+  padding-bottom: 12px;
+}
+.dialogue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.dialogue-table td {
+  vertical-align: top;
+  padding: 10px 0;
+}
+.speaker-col {
+  width: 140px;
+  color: #000000;
+  font-weight: bold;
+  font-size: 24px;
+  white-space: nowrap;
+}
+.speaker-col-front {
+  width: 140px;
+  color: #718096;
+  font-weight: bold;
+  font-size: 36.8px;
+  white-space: nowrap;
+}
+.speech-col {
+  color: #e53e3e;
+  font-weight: bold;
+  font-size: 36.8px;
+  line-height: 1.5;
+}
+.speech-col-back {
+  color: #e53e3e;
+  font-weight: bold;
+  font-size: 24px;
+  line-height: 1.5;
+}
+.pinyin-block {
+  color: #718096;
+  font-weight: bold;
+  font-size: 20px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  display: block;
+}
+.meaning-text {
+  font-size: 20px;
+  color: #4b5563;
+  font-weight: normal;
+  margin-top: 4px;
+}
+
+.controls{display:flex;gap:16px;justify-content:center;margin-top:22px}
+button{
+  border:0;border-radius:14px;padding:16px 26px;font-size:20px;
+  cursor:pointer;background:#e9eef7;color:#233044;
+}
+button.primary{background:#2563eb;color:white}
+button:hover{filter:brightness(.97)}
+.extra{display:flex;justify-content:center;gap:10px;margin-top:14px}
+.shuffle{background:#e9f8ef}
+
+@media(max-width:600px){
+ .app{padding-top:16px}.card{height:624px}
+ .face{padding:22px 20px}
+ .context-title{font-size:18px; margin-bottom:14px}
+ .speaker-col{width:100px; font-size:18px}
+ .speaker-col-front{width:100px; font-size:27.6px}
+ .speech-col{font-size:27.6px}
+ .speech-col-back{font-size:18px}
+ .pinyin-block{font-size:16px;}
+ .meaning-text{font-size:16px}
+ .controls button{padding:12px 16px; font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🇨🇳 BÀI 15 – BÀI KHÓA</h1>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card-wrap" id="cardWrap">
+    <div class="card" id="card">
+      <div class="face front">
+        <div class="card-content" id="frontContent"></div>
+      </div>
+      <div class="face back">
+        <div class="card-content" id="backContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevCard()">← Trước</button>
+    <button class="primary" onclick="flipCard()">Lật thẻ</button>
+    <button onclick="nextCard()">Tiếp →</button>
+  </div>
+  <div class="extra">
+    <button class="shuffle" onclick="shuffleCards()">🔀 Trộn thẻ</button>
+  </div>
+</div>
+
+<script>
+const originalCards = [
+  {
+    "frontContext": "BÀI KHÓA 1: Cảnh tượng trong một cửa hàng đang giảm giá",
+    "frontLines": [
+      { "speaker": "旁白", "speech": "这家商店的东西正在打折。" },
+      { "speaker": "旁白", "speech": "商店里顾客真不少，有的正在挑东西，有的正在排队交钱。" },
+      { "speaker": "旁白", "speech": "咦，这位先生在做什么呢？" },
+      { "speaker": "旁白", "speech": "他正在等他的爱人呢。" }
+    ],
+    "backLines": [
+      { "speaker": "旁白", "speech": "这家商店的东西正在打折。", "pinyin": "Zhè jiā shāngdiàn de dōngxī zhèngzài dǎ zhé.", "meaning": "Đồ đạc trong cửa hàng này đang giảm giá." },
+      { "speaker": "旁白", "speech": "商店里顾客真不少，有的正在挑东西，有的正在排队交钱。", "pinyin": "Shāngdiàn li gùkè zhēn bù shǎo, yǒude zhèngzài tiāo dōngxī, yǒude zhèngzài pái duì jiāo qián.", "meaning": "Khách hàng trong cửa hàng thật không ít, có người đang chọn đồ, có người đang xếp hàng trả tiền." },
+      { "speaker": "旁白", "speech": "咦，这位先生在做什么呢？", "pinyin": "Yí, zhè wèi xiānsheng zài zuò shénme ne?", "meaning": "Ồ, vị tiên sinh này đang làm gì thế nhỉ?" },
+      { "speaker": "旁白", "speech": "他正在等他的爱人呢。", "pinyin": "Tā zhèngzài děng tā de àiren ne.", "meaning": "Anh ấy đang đợi vợ của mình đấy." }
+    ]
+  },
+  {
+    "frontContext": "BÀI KHÓA 2: Chuyện một người bận tìm việc",
+    "frontLines": [
+      { "speaker": "旁白", "speech": "小雨最近很忙，他正在找工作。" },
+      { "speaker": "旁白", "speech": "刚才我去他那儿的时候，他正在给一家公司打电话。" },
+      { "speaker": "旁白", "speech": "听说这家公司正在招聘职员，他打算去应聘。" }
+    ],
+    "backLines": [
+      { "speaker": "旁白", "speech": "小雨最近很忙，他正在找工作。", "pinyin": "Xiǎoyǔ zuìjìn hěn máng, tā zhèngzài zhǎo gōngzuò.", "meaning": "Tiểu Vũ dạo này rất bận, cậu ấy đang tìm việc." },
+      { "speaker": "旁白", "speech": "刚才我去他那儿的时候，他正在给一家公司打电话。", "pinyin": "Gāngcái wǒ qù tā nàr de shíhou, tā zhèngzài gěi yì jiā gōngsī dǎ diànhuà.", "meaning": "Lúc nãy tôi đến chỗ cậu ấy thì cậu ấy đang gọi điện thoại cho một công ty." },
+      { "speaker": "旁白", "speech": "听说这家公司正在招聘职员，他打算去应聘。", "pinyin": "Tīngshuō zhè jiā gōngsī zhèngzài zhāopìn zhíyuán, tā dǎsuàn qù yìngpìn.", "meaning": "Nghe nói công ty này đang tuyển nhân viên, cậu ấy định đi ứng tuyển." }
+    ]
+  },
+  {
+    "frontContext": "BÀI KHÓA 3: Ngoài trời mưa, trong nhà mấy người uống cà phê và nói chuyện",
+    "frontLines": [
+      { "speaker": "旁白", "speech": "外边正在下雨，莉莉跟朋友们在房间里一边喝咖啡一边聊天儿。" },
+      { "speaker": "旁白", "speech": "莉莉问大家：“明年这个时候，你们可能在做什么呢？”" },
+      { "speaker": "旁白", "speech": "小叶说：“我可能正在跟男朋友一起旅行。”" },
+      { "speaker": "旁白", "speech": "直美说：“我可能正在想你们。”" },
+      { "speaker": "旁白", "speech": "安娜的回答很有意思。" },
+      { "speaker": "旁白", "speech": "你猜猜，她说的是什么呢？" }
+    ],
+    "backLines": [
+      { "speaker": "旁白", "speech": "外边正在下雨，莉莉跟朋友们在房间里一边喝咖啡一边聊天儿。", "pinyin": "Wàibiān zhèngzài xià yǔ, Lìli gēn péngyoumen zài fángjiān li yìbiān hē kāfēi yìbiān liáo tiānr.", "meaning": "Bên ngoài đang mưa, Lili cùng các bạn trong phòng vừa uống cà phê vừa tán gẫu." },
+      { "speaker": "旁白", "speech": "莉莉问大家：“明年这个时候，你们可能在做什么呢？”", "pinyin": "Lìli wèn dàjiā: “Míngnián de zhè ge shíhou, nǐmen kěnéng zài zuò shénme ne?”", "meaning": "Lili hỏi mọi người: “Giờ này năm sau, các bạn có thể đang làm gì nhỉ?”" },
+      { "speaker": "旁白", "speech": "小叶说：“我可能正在跟男朋友一起旅行。”", "pinyin": "Xiǎoyè shuō: “Wǒ kěnéng zhèngzài gēn nánpéngyou yìqǐ lǚxíng.”", "meaning": "Tiểu Diệp nói: “Tôi có thể đang đi du lịch cùng bạn trai.”" },
+      { "speaker": "旁白", "speech": "直美说：“我可能正在想你们。”", "pinyin": "Zhíměi shuō: “Wǒ kěnéng zhèngzài xiǎng nǐmen.”", "meaning": "Trực Mỹ nói: “Tôi có thể đang nghĩ về các bạn.”" },
+      { "speaker": "旁白", "speech": "安娜的回答很有意思。", "pinyin": "Ānnà de huídá hěn yǒu yìsi.", "meaning": "Câu trả lời của Anna rất thú vị." },
+      { "speaker": "旁白", "speech": "你猜猜，她说的是什么呢？", "pinyin": "Nǐ cāicai, tā shuō de shì shénme?", "meaning": "Bạn đoán xem, cô ấy nói gì nào?" }
+    ]
+  }
+];
+
+let cards = [...originalCards];
+let index = 0;
+let flipped = false;
+
+function render(){
+  const c = cards[index];
+  
+  let frontHtml = `<div class="context-title">${c.frontContext}</div><table class="dialogue-table">`;
+  c.frontLines.forEach(line => {
+    frontHtml += `
+      <tr>
+        <td class="speaker-col-front">${line.speaker}:</td>
+        <td class="speech-col">${line.speech}</td>
+      </tr>`;
+  });
+  frontHtml += `</table>`;
+  const frontEl = document.getElementById('frontContent');
+  frontEl.innerHTML = frontHtml;
+  frontEl.scrollTop = 0;
+
+  let backHtml = `<div class="context-title">${c.frontContext}</div><table class="dialogue-table">`;
+  c.backLines.forEach(line => {
+    backHtml += `
+      <tr>
+        <td class="speaker-col">${line.speaker}:</td>
+        <td class="speech-col-back">
+          ${line.speech}
+          <div class="pinyin-block">${line.pinyin}</div>
+          <div class="meaning-text">${line.meaning}</div>
+        </td>
+      </tr>`;
+  });
+  backHtml += `</table>`;
+  const backEl = document.getElementById('backContent');
+  backEl.innerHTML = backHtml;
+  backEl.scrollTop = 0;
+
+  document.getElementById('progress').textContent = `Thẻ ${index+1} / ${cards.length}`;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function flipCard(){
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function nextCard(){
+  index = (index + 1) % cards.length;
+  flipped = false; render();
+}
+
+function prevCard(){
+  index = (index - 1 + cards.length) % cards.length;
+  flipped = false; render();
+}
+
+function shuffleCards(){
+  for(let i=cards.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]];
+  }
+  index=0; flipped=false; render();
+}
+
+// Bấm chuột vào bất kỳ đâu trên màn hình (trừ nút bấm hoặc khi đang kéo bôi đen chữ) đều lật thẻ
+let startX = 0, startY = 0;
+document.addEventListener('pointerdown', e => {
+  startX = e.clientX;
+  startY = e.clientY;
+});
+
+document.addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  const moved = Math.hypot(e.clientX - startX, e.clientY - startY) > 6;
+  const selectedText = window.getSelection && window.getSelection().toString().length > 0;
+  if (moved || selectedText) return;
+  flipCard();
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') nextCard();
+  else if(e.key==='ArrowLeft') prevCard();
+  else if(e.key===' ' || e.key==='Enter'){
+    e.preventDefault();
+    flipCard();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

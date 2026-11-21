@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BÀI 15 - CHỮ HÁN</title>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,"Microsoft YaHei",sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#f9fbff);
+  display:flex; justify-content:center; color:#202124;
+}
+.app{width:min(760px,95vw); padding:24px 0 32px}
+h1{text-align:center;margin:0 0 16px;font-size:28px}
+.progress{text-align:center;font-size:16px;color:#666;margin-bottom:12px}
+
+.card-wrap{perspective:1200px; cursor:pointer}
+.card{
+  width:100%; height:544px; position:relative; transform-style:preserve-3d;
+  transition:transform .55s ease;
+}
+.card.flipped{transform:rotateY(180deg)}
+.face{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:24px; background:white; box-shadow:0 12px 35px rgba(30,60,100,.15);
+  display:flex; flex-direction:column; justify-content:space-between; align-items:center;
+  padding:28px 20px; border:1px solid #e6eaf0;
+}
+
+.stroke-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: auto 0;
+  width: 100%;
+}
+
+.char-box {
+  width: 260px;
+  height: 260px;
+  position: relative;
+  border: 2px solid #feb2b2;
+  border-radius: 12px;
+  background-color: #fff;
+  background-image: 
+    linear-gradient(to right, transparent 49.5%, #fbb6ce 49.5%, #fbb6ce 50.5%, transparent 50.5%),
+    linear-gradient(to bottom, transparent 49.5%, #fbb6ce 49.5%, #fbb6ce 50.5%, transparent 50.5%),
+    linear-gradient(45deg, transparent 49.5%, #fed7e2 49.5%, #fed7e2 50.5%, transparent 50.5%),
+    linear-gradient(-45deg, transparent 49.5%, #fed7e2 49.5%, #fed7e2 50.5%, transparent 50.5%);
+  box-shadow: inset 0 0 8px rgba(229,62,62,0.05);
+}
+
+.char-box svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.back{transform:rotateY(180deg)}
+.back .han-static{
+  font-size: 84px;
+  font-weight: bold;
+  color: #e53e3e;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.pinyin{font-size:48px;font-weight:700;color:#2b6cb0;margin-bottom:6px; text-align: center;}
+.pos{font-size:26px;font-style:italic;color:#718096;margin-bottom:8px; text-align: center;}
+.meaning{font-size:36px;color:#2d3748;font-weight:500; text-align: center; white-space: pre-line; line-height: 1.25;}
+
+.stroke-tools {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.btn-small {
+  padding: 10px 18px;
+  font-size: 26px;
+  border-radius: 12px;
+  background: #edf2f7;
+  color: #2d3748;
+  border: 1px solid #cbd5e0;
+  cursor: pointer;
+}
+.btn-small:hover { background: #e2e8f0; }
+
+.controls{display:flex;gap:12px;justify-content:center;margin-top:18px}
+button{
+  border:0;border-radius:14px;padding:12px 18px;font-size:16px;
+  cursor:pointer;background:#e9eef7;color:#233044;
+}
+button.primary{background:#2563eb;color:white}
+button:hover{filter:brightness(.97)}
+.extra{display:flex;justify-content:center;gap:10px;margin-top:12px}
+.shuffle{background:#e9f8ef}
+
+@media(max-width:520px){
+ .app{padding-top:16px}.card{height:480px}
+ .char-box{width:160px; height:160px}
+ .back .han-static{font-size:64px}
+ .pinyin{font-size:36px}
+ .pos{font-size:20px}
+ .meaning{font-size:28px}
+ .btn-small{font-size:20px; padding:8px 14px}
+ .controls button{padding:10px 14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🇨🇳 BÀI 15 - CHỮ HÁN</h1>
+  <div class="progress" id="progress"></div>
+
+  <div class="card-wrap" id="cardWrap" onclick="flipCard()">
+    <div class="card" id="card">
+      <div class="face front">
+        <div class="stroke-container" id="strokeContainer"></div>
+        
+        <div class="stroke-tools">
+          <button class="btn-small" onclick="event.stopPropagation(); animateStrokes();">▶ Xem nét viết</button>
+        </div>
+        
+      </div>
+
+      <div class="face back">
+       
+        <div style="margin: auto 0; display:flex; flex-direction:column; align-items:center;">
+          <div class="han-static" id="backHan"></div>
+          <div class="pinyin" id="pinyin"></div>
+          <div class="pos" id="pos"></div>
+          <div class="meaning" id="meaning"></div>
+        </div>
+     
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="event.stopPropagation();prevCard()">← Trước</button>
+    <button class="primary" onclick="event.stopPropagation();flipCard()">Lật thẻ</button>
+    <button onclick="event.stopPropagation();nextCard()">Tiếp →</button>
+  </div>
+  <div class="extra">
+    <button class="shuffle" onclick="event.stopPropagation();shuffleCards()">🔀 Trộn từ vựng</button>
+  </div>
+</div>
+
+<script>
+const originalCards = [
+  { "han": "家", "pinyin": "jiā", "pos": "lượng từ", "meaning": "quán, nhà\nlượng từ dùng cho cửa hàng, tiệm, siêu thị…" },
+  { "han": "正在", "pinyin": "zhèngzài", "pos": "phó từ", "meaning": "đang\ndiễn ra" },
+  { "han": "打折", "pinyin": "dǎ zhé", "pos": "động từ", "meaning": "giảm giá, bán hạ giá" },
+  { "han": "顾客", "pinyin": "gùkè", "pos": "danh từ", "meaning": "khách hàng" },
+  { "han": "少", "pinyin": "shǎo", "pos": "tính từ", "meaning": "ít, vài" },
+  { "han": "有的", "pinyin": "yǒude", "pos": "đại từ", "meaning": "có người, có cái\nchỉ một số" },
+  { "han": "挑", "pinyin": "tiāo", "pos": "động từ", "meaning": "chọn, lựa" },
+  { "han": "排队", "pinyin": "pái duì", "pos": "động từ", "meaning": "xếp hàng" },
+  { "han": "交", "pinyin": "jiāo", "pos": "động từ", "meaning": "trả (tiền), nộp" },
+  { "han": "咦", "pinyin": "yí", "pos": "thán từ", "meaning": "ồ, hử\nthể hiện sự ngạc nhiên, tò mò" },
+  { "han": "先生", "pinyin": "xiānsheng", "pos": "danh từ", "meaning": "ông, ngài, tiên sinh" },
+  { "han": "找", "pinyin": "zhǎo", "pos": "động từ", "meaning": "tìm, tìm kiếm" },
+  { "han": "刚才", "pinyin": "gāngcái", "pos": "danh từ", "meaning": "vừa nãy, lúc nãy" },
+  { "han": "打（电话）", "pinyin": "dǎ (diànhuà)", "pos": "động từ", "meaning": "gọi (điện thoại)" },
+  { "han": "招聘", "pinyin": "zhāopìn", "pos": "động từ", "meaning": "tuyển dụng, chiêu mộ\nnhân viên" },
+  { "han": "打算", "pinyin": "dǎsuàn", "pos": "động từ, danh từ", "meaning": "dự định, kế hoạch" },
+  { "han": "应聘", "pinyin": "yìngpìn", "pos": "động từ", "meaning": "ứng tuyển, nhận lời mời làm việc" },
+  { "han": "外边", "pinyin": "wàibian", "pos": "danh từ", "meaning": "bên ngoài" },
+  { "han": "下（雨）", "pinyin": "xià (yǔ)", "pos": "động từ", "meaning": "mưa, (trời) đổ mưa" },
+  { "han": "雨", "pinyin": "yǔ", "pos": "danh từ", "meaning": "mưa" },
+  { "han": "一边……一边……", "pinyin": "yìbiān…… yìbiān……", "pos": "liên từ", "meaning": "vừa……vừa……\n(đồng thời)" },
+  { "han": "聊天儿", "pinyin": "liáo tiānr", "pos": "động từ", "meaning": "tán gẫu, nói chuyện phiếm" },
+  { "han": "大家", "pinyin": "dàjiā", "pos": "đại từ", "meaning": "mọi người, tất cả" },
+  { "han": "明年", "pinyin": "míngnián", "pos": "danh từ", "meaning": "năm sau, năm tới" },
+  { "han": "可能", "pinyin": "kěnéng", "pos": "trợ động từ", "meaning": "có thể, có lẽ" },
+  { "han": "旅行", "pinyin": "lǚxíng", "pos": "động từ", "meaning": "du lịch, đi ngao du" },
+  { "han": "回答", "pinyin": "huídá", "pos": "động từ", "meaning": "trả lời, đáp lại" },
+  { "han": "猜", "pinyin": "cāi", "pos": "động từ", "meaning": "đoán, phỏng đoán" },
+  { "han": "擦", "pinyin": "cā", "pos": "động từ", "meaning": "lau, chùi" },
+  { "han": "黑板", "pinyin": "hēibǎn", "pos": "danh từ", "meaning": "bảng đen" },
+  { "han": "音乐", "pinyin": "yīnyuè", "pos": "danh từ", "meaning": "âm nhạc" },
+  { "han": "信", "pinyin": "xìn", "pos": "danh từ", "meaning": "thư từ, bức thư" },
+  { "han": "寄", "pinyin": "jì", "pos": "động từ", "meaning": "gửi\nthư" },
+  { "han": "邮票", "pinyin": "yóupiào", "pos": "danh từ", "meaning": "tem thư" },
+  { "han": "安娜", "pinyin": "Ānnà", "pos": "danh từ riêng", "meaning": "Anna" }
+];
+
+let cards = [...originalCards];
+let index = 0;
+let flipped = false;
+let writers = [];
+
+function render(){
+  const c = cards[index];
+  
+  const container = document.getElementById('strokeContainer');
+  container.innerHTML = '';
+  writers = [];
+
+  const cleanHan = c.han.replace(/[^一-龥]/g, '');
+  const charArray = Array.from(cleanHan.length > 0 ? cleanHan : c.han);
+  
+  let boxSize = 260;
+  if (charArray.length >= 4) boxSize = 145;
+  else if (charArray.length === 3) boxSize = 180;
+  if (window.innerWidth <= 520) {
+    boxSize = charArray.length >= 3 ? 115 : 160;
+  }
+
+  charArray.forEach((char, idx) => {
+    const box = document.createElement('div');
+    box.className = 'char-box';
+    box.style.width = boxSize + 'px';
+    box.style.height = boxSize + 'px';
+    box.id = 'char-box-' + idx;
+    container.appendChild(box);
+
+    try {
+      const writer = HanziWriter.create(box.id, char, {
+        width: boxSize,
+        height: boxSize,
+        padding: 5,
+        strokeColor: '#e53e3e',
+        radicalColor: '#c53030',
+        outlineColor: '#fed7d7',
+        showOutline: true,
+        delayBetweenStrokes: 150
+      });
+      writers.push(writer);
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+  document.getElementById('backHan').textContent = c.han;
+  document.getElementById('pinyin').textContent = c.pinyin;
+  document.getElementById('pos').textContent = c.pos;
+  document.getElementById('meaning').textContent = c.meaning;
+
+  document.getElementById('progress').textContent = 'Từ ' + (index+1) + ' / ' + cards.length;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function animateStrokes(){
+  writers.forEach((writer, i) => {
+    setTimeout(() => {
+      writer.animateCharacter();
+    }, i * 800);
+  });
+}
+
+function flipCard(){
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function nextCard(){
+  index = (index + 1) % cards.length;
+  flipped = false; render();
+}
+
+function prevCard(){
+  index = (index - 1 + cards.length) % cards.length;
+  flipped = false; render();
+}
+
+function shuffleCards(){
+  for(let i=cards.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]];
+  }
+  index=0; flipped=false; render();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') nextCard();
+  else if(e.key==='ArrowLeft') prevCard();
+  else if(e.key===' ' || e.key==='Enter'){e.preventDefault();flipCard();}
+});
+
+render();
+</script>
+</body>
+</html>
